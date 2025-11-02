@@ -1,6 +1,7 @@
 import { Component, OnInit, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { ConfigurationService } from './services/configuration.service';
 import { ApiEndpointsService } from './services/api-endpoints.service';
+import { UserService } from './services/user.service';
 import * as THREE from 'three';
 import * as p5 from 'p5';
 
@@ -25,7 +26,8 @@ export class AppComponent implements OnInit, AfterViewInit {
   
   constructor(
     public configService: ConfigurationService,
-    private apiEndpointsService: ApiEndpointsService
+    private apiEndpointsService: ApiEndpointsService,
+    private userService: UserService
   ) {}
 
   LEVEL_MINIMUM_ROWS = [
@@ -74,9 +76,12 @@ export class AppComponent implements OnInit, AfterViewInit {
   // Score properties
   currentScore: number = 0;
   
-  // High score properties
+    // High Scores Management
   highScores: {name: string, score: number}[] = [];
   showHighScores: boolean = true; // Show high scores by default
+  currentPlayerName: string = '';
+  customPlayerName: string = '';
+  showPlayerNameInput: boolean = false;
   
   // Norse names for high scores
   private norseNames: string[] = [
@@ -113,6 +118,9 @@ export class AppComponent implements OnInit, AfterViewInit {
   TILE_FLOOR: String = 'floor';
 
   public ngOnInit(): void {
+    // Initialize player name
+    this.initializePlayerName();
+    
     this.screenWidth = this.configService.getScreenWidth();
     this.screenHeight = this.configService.getScreenHeight();
     
@@ -313,10 +321,13 @@ export class AppComponent implements OnInit, AfterViewInit {
       return;
     }
     
-    // Get a random Norse name
-    const randomName = this.norseNames[Math.floor(Math.random() * this.norseNames.length)];
+    const playerName = this.getPlayerNameForScore();
     
-    this.highScores.push({ name: randomName, score: score });
+    // Remove any existing scores from the same player
+    this.highScores = this.highScores.filter(s => s.name !== playerName);
+    
+    // Add the new score
+    this.highScores.push({ name: playerName, score: score });
     this.highScores.sort((a, b) => b.score - a.score); // Sort by score descending
     this.highScores = this.highScores.slice(0, 10); // Keep only top 10
     this.saveHighScores();
@@ -1318,5 +1329,60 @@ export class AppComponent implements OnInit, AfterViewInit {
     
     // Start the game immediately
     this.startGame();
+  }
+
+  /**
+   * Initialize the player name using the UserService
+   */
+  private initializePlayerName(): void {
+    this.currentPlayerName = this.userService.getPCUsername();
+    console.log('Player name initialized:', this.currentPlayerName);
+  }
+
+  /**
+   * Get the player name to use for the high score
+   */
+  private getPlayerNameForScore(): string {
+    // If custom name is provided, use it and save as preference
+    if (this.customPlayerName && this.customPlayerName.trim().length > 0) {
+      this.userService.setPreferredUsername(this.customPlayerName.trim());
+      return this.customPlayerName.trim();
+    }
+    
+    // Otherwise use the detected/current player name
+    return this.currentPlayerName || 'Anonymous';
+  }
+
+  /**
+   * Toggle player name input
+   */
+  public togglePlayerNameInput(): void {
+    this.showPlayerNameInput = !this.showPlayerNameInput;
+    if (this.showPlayerNameInput) {
+      this.customPlayerName = this.currentPlayerName;
+    }
+  }
+
+  /**
+   * Update player name
+   */
+  public updatePlayerName(): void {
+    if (this.customPlayerName && this.customPlayerName.trim().length > 0) {
+      this.currentPlayerName = this.customPlayerName.trim();
+      this.userService.setPreferredUsername(this.currentPlayerName);
+      this.showPlayerNameInput = false;
+      console.log('Player name updated to:', this.currentPlayerName);
+    }
+  }
+
+  /**
+   * Reset player name to detected name
+   */
+  public resetPlayerName(): void {
+    this.userService.clearStoredUsername();
+    this.currentPlayerName = this.userService.getPCUsername();
+    this.customPlayerName = '';
+    this.showPlayerNameInput = false;
+    console.log('Player name reset to:', this.currentPlayerName);
   }
 }

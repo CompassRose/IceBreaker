@@ -6,3 +6,4 @@ export * from './screen-utility.service';
 export * from './data-export.service';
 export * from './configuration.service';
 export * from './api-endpoints.service';
+export * from './high-scores.service';

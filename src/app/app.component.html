@@ -283,6 +283,34 @@
       <span class="trophy-right">🏆</span>
     </div>
 
+    <!-- Player Name Section -->
+    <div class="player-name-section">
+      <div class="current-player">
+        <span class="player-label">Playing as:</span>
+        <span class="player-name-display">{{ currentPlayerName }}</span>
+        <button class="edit-name-btn" (click)="togglePlayerNameInput()" title="Change player name">
+          ✏️
+        </button>
+      </div>
+      
+      <!-- Player Name Input -->
+      <div class="player-name-input" *ngIf="showPlayerNameInput">
+        <input 
+          type="text" 
+          [(ngModel)]="customPlayerName" 
+          placeholder="Enter your name"
+          maxlength="20"
+          class="name-input"
+          (keyup.enter)="updatePlayerName()"
+        >
+        <div class="name-input-actions">
+          <button class="save-name-btn" (click)="updatePlayerName()">Save</button>
+          <button class="cancel-name-btn" (click)="showPlayerNameInput = false">Cancel</button>
+          <button class="reset-name-btn" (click)="resetPlayerName()" title="Reset to detected name">🔄</button>
+        </div>
+      </div>
+    </div>
+
     <div class="current-score" *ngIf="currentScore > 0">
       <h3>
         Your Score: <span class="score-highlight">{{ currentScore }}</span>
