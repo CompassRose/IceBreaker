@@ -1,0 +1,382 @@
+<!-- Toolbar -->
+<div class="toolbar" role="banner">
+  <div class="d-flex">
+  <img
+    width="60"
+    alt="Angular Logo"
+    src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTAgMjUwIj4KICAgIDxwYXRoIGZpbGw9IiNERDAwMzEiIGQ9Ik0xMjUgMzBMMzEuOSA2My4ybDE0LjIgMTIzLjFMMTI1IDIzMGw3OC45LTQzLjcgMTQuMi0xMjMuMXoiIC8+CiAgICA8cGF0aCBmaWxsPSIjQzMwMDJGIiBkPSJNMTI1IDMwdjIyLjItLjFWMjMwbDc4LjktNDMuNyAxNC4yLTEyMy4xTDEyNSAzMHoiIC8+CiAgICA8cGF0aCAgZmlsbD0iI0ZGRkZGRiIgZD0iTTEyNSA1Mi4xTDY2LjggMTgyLjZoMjEuN2wxMS43LTI5LjJoNDkuNGwxMS43IDI5LjJIMTgzTDEyNSA1Mi4xem0xNyA4My4zaC0zNGwxNy00MC45IDE3IDQwLjl6IiAvPgogIDwvc3ZnPg=="
+  />
+  <span class="title-text">Ice Fishing Expedition</span>
+  </div>
+  <!-- Game Info in Toolbar -->
+  <div class="toolbar-game-info">
+    <!-- Target Number Display - Independent Element -->
+    <div class="toolbar-target-info">
+      <span class="target-label">Target:</span>
+      <div class="target-number" [class.flash-correct]="showCorrectFlash">{{ targetNumber }}</div>
+    </div>
+
+    <!-- Timer Display -->
+    <div class="toolbar-timer-info" *ngIf="gameStarted">
+      <span class="timer-label">Time:</span>
+      <span
+        class="timer-value"
+        [class.text-danger]="timeRemaining <= 10"
+        [class.text-warning]="timeRemaining <= 30 && timeRemaining > 10"
+      >
+        {{ timeRemaining }}s
+      </span>
+    </div>
+
+    <!-- Selection Info (During Play) -->
+    <div
+      class="toolbar-selection-info"
+      *ngIf="gameState === 'playing'"
+    >
+      <span class="selection-label">Selected:</span>
+      <span
+        class="selection-total"
+        [class.text-success]="totalSelectedValue === targetNumber"
+        [class.text-warning]="totalSelectedValue > targetNumber"
+      >
+        {{ totalSelectedValue || 0 }}
+        <span *ngIf="totalSelectedValue === targetNumber" class="match-badge"
+          >✓</span
+        >
+      </span>
+    </div>
+
+    <!-- Score Display -->
+    <div class="toolbar-score-info" *ngIf="gameStarted || currentScore > 0">
+      <span class="score-label">Score:</span>
+      <span class="score-value">{{ currentScore }}</span>
+    </div>
+
+    <!-- Game Status Buttons -->
+    <div class="toolbar-game-status">
+      <!-- Start Game Button -->
+      <button
+        *ngIf="gameState === 'waiting'"
+        class="btn btn-success btn-sm"
+        (click)="startGame()"
+      >
+        <i class="fas fa-play"></i> Start Game
+      </button>
+
+      <!-- Restart Game Button (During Active Play) -->
+      <button
+        *ngIf="gameState === 'playing'"
+        class="btn btn-warning btn-sm"
+        (click)="restartGame()"
+      >
+        <i class="fas fa-redo"></i> Restart
+      </button>
+
+      <!-- Play Again Buttons -->
+      <button
+        *ngIf="gameState === 'lost'"
+        class="btn btn-primary btn-sm"
+        (click)="restartGame()"
+      >
+        Play Again
+      </button>
+      <button
+        *ngIf="gameState === 'won'"
+        class="btn btn-success btn-sm"
+        (click)="restartGame()"
+      >
+        Play Again
+      </button>
+    </div>
+  </div>
+  <div>
+    <a
+      aria-label="Angular on X"
+      target="_blank"
+      rel="noopener"
+      href="https://twitter.com/angular"
+      title="X"
+    >
+      <svg
+        id="twitter-logo"
+        xmlns="http://www.w3.org/2000/svg"
+        height="24"
+        width="24"
+        data-name="Logo"
+        viewBox="0 0 512 512"
+        fill="#fff"
+      >
+        <path
+          d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"
+        />
+      </svg>
+    </a>
+    <a
+      aria-label="Angular on YouTube"
+      target="_blank"
+      rel="noopener"
+      href="https://youtube.com/angular"
+      title="YouTube"
+    >
+      <svg
+        id="youtube-logo"
+        height="24"
+        width="24"
+        data-name="Logo"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="#fff"
+      >
+        <path d="M0 0h24v24H0V0z" fill="none" />
+        <path
+          d="M21.58 7.19c-.23-.86-.91-1.54-1.77-1.77C18.25 5 12 5 12 5s-6.25 0-7.81.42c-.86.23-1.54.91-1.77 1.77C2 8.75 2 12 2 12s0 3.25.42 4.81c.23.86.91 1.54 1.77 1.77C5.75 19 12 19 12 19s6.25 0 7.81-.42c.86-.23 1.54-.91 1.77-1.77C22 15.25 22 12 22 12s0-3.25-.42-4.81zM10 15V9l5.2 3-5.2 3z"
+        />
+      </svg>
+    </a>
+    <a
+      aria-label="Angular on Facebook"
+      target="_blank"
+      rel="noopener"
+      href="https://facebook.com/angular"
+      title="Facebook"
+    >
+      <svg
+        id="facebook-logo"
+        height="24"
+        width="24"
+        data-name="Logo"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="#fff"
+      >
+        <path
+          d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+        />
+      </svg>
+    </a>
+  </div>
+</div>
+
+<!-- Full-screen p5.js Snowfall Background -->
+<div #p5FullscreenContainer class="p5-fullscreen-background"></div>
+
+<div class="content" role="main">
+  <!-- Game Grid Container -->
+  <div class="game-container">
+    <!-- Underwater Background Decorations -->
+    <div class="underwater-decorations">
+      <!-- Sea Floor Rubble Background -->
+      <div class="sea-floor-rubble"></div>
+      <div class="sea-floor-rubble-large rubble-1"></div>
+      <div class="sea-floor-rubble-large rubble-2"></div>
+      <div class="sea-floor-rubble-large rubble-3"></div>
+      
+      <!-- Kelp Formations - Realistic Clumps -->
+      <!-- Clump 1 -->
+      <div class="kelp kelp-1"></div>
+      <div class="kelp kelp-1b"></div>
+      <div class="kelp kelp-1c"></div>
+      
+      <!-- Clump 2 -->
+      <div class="kelp kelp-2"></div>
+      <div class="kelp kelp-2b"></div>
+      <div class="kelp kelp-2c"></div>
+      
+      <!-- Clump 3 (largest clump) -->
+      <div class="kelp kelp-3"></div>
+      <div class="kelp kelp-3b"></div>
+      <div class="kelp kelp-3c"></div>
+      <div class="kelp kelp-3d"></div>
+      
+      <!-- Clump 4 -->
+      <div class="kelp kelp-4"></div>
+      <div class="kelp kelp-4b"></div>
+      
+      <!-- Clump 5 -->
+      <div class="kelp kelp-5"></div>
+      <div class="kelp kelp-5b"></div>
+      <div class="kelp kelp-5c"></div>
+      
+      <!-- Clump 6 -->
+      <div class="kelp kelp-6"></div>
+      <div class="kelp kelp-6b"></div>
+      <div class="kelp kelp-6c"></div>
+      
+      <!-- Clump 7 -->
+      <div class="kelp kelp-7"></div>
+      <div class="kelp kelp-7b"></div>
+      <div class="kelp kelp-7c"></div>
+      <div class="kelp kelp-7d"></div>
+      <div class="kelp kelp-7e"></div>
+      <div class="kelp kelp-7f"></div>
+      <div class="kelp kelp-7g"></div>
+      <div class="kelp kelp-7h"></div>
+      
+      <!-- Clump 8 -->
+      <div class="kelp kelp-8"></div>
+      <div class="kelp kelp-8b"></div>
+      <div class="kelp kelp-8c"></div>
+      
+      <!-- Rock Formations -->
+      <!-- <div class="rock rock-1">🪨</div>
+      <div class="rock rock-2">🪨</div>
+      <div class="rock rock-3">🪨</div> -->
+      <div class="rock rock-4"></div>
+      <div class="rock rock-5"></div>
+      
+      <!-- Coral and Sea Plants -->
+      <div class="coral coral-1">🪸</div>
+      <div class="coral coral-2">🪸</div>
+      <div class="coral coral-3">🪸</div>
+      <div class="coral coral-4">🪸</div>
+      <div class="coral coral-5">🪸</div>
+      <div class="coral coral-6">🪸</div>
+    </div>
+    
+    <div class="game-grid-wrapper">
+      <div
+        class="game-grid"
+        [style.width.px]="getGameGridWidth()"
+        [style.height.px]="getGameGridHeight()"
+      >
+        <ng-container *ngFor="let tile of TILE_PLACEMENT; let i = index">
+          <div
+            *ngIf="!TILE_HIDDEN[i]"
+            class="game-tile"
+            [class.selected]="TILE_SELECTED[i]"
+            [style.left.px]="tile[0]"
+            [style.top.px]="tile[1]"
+            [style.animation-delay.ms]="TILE_ANIMATION_DELAYS[i]"
+            [attr.data-index]="i"
+            (click)="toggleTileSelection(i)"
+          >
+            <span
+              class="snowflake"
+              *ngFor="let snowflake of getSnowflakeArray(TILE_VALUES[i])"
+              >❄</span
+            >
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Water Element Below Game -->
+<div class="water-element">
+  <div class="fish fish-1">🐟</div>
+  <div class="fish fish-2">🐠</div>
+  <div class="fish fish-3">🐡</div>
+  <div class="fish fish-4">🐟</div>
+  <div class="fish fish-5">🐙</div>
+  <div class="fish fish-6">🐢</div>
+  <div class="fish fish-7">🐠</div>
+  <div class="fish fish-8">🐟</div>
+</div>
+
+<!-- High Scores Modal -->
+<div class="high-scores-modal" *ngIf="showHighScores">
+  <div class="high-scores-content">
+    <div class="high-scores-header">
+      <span class="trophy-left">🏆</span>
+      <h2>High Scores</h2>
+      <span class="trophy-right">🏆</span>
+    </div>
+
+    <div class="current-score" *ngIf="currentScore > 0">
+      <h3>
+        Your Score: <span class="score-highlight">{{ currentScore }}</span>
+      </h3>
+      <p *ngIf="isHighScore(currentScore)" class="new-high-score">
+        🎉 New High Score! 🎉
+      </p>
+    </div>
+
+    <div class="high-scores-list">
+      <ng-container *ngFor="let i of [1,2,3,4,5,6,7,8,9,10]">
+        <ng-container *ngIf="getScoreEntryAtRank(i) as scoreEntry; else emptyRow">
+          <div class="score-entry">
+            <span class="rank-number">{{ i }}</span>
+            <div class="player-info">
+              <span class="player-name">{{ scoreEntry.name }}</span>
+              <span
+                class="score-value"
+                [class.current-score-highlight]="
+                  scoreEntry.score === currentScore && isHighScore(currentScore)
+                "
+              >
+                {{ scoreEntry.score }}
+              </span>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #emptyRow>
+          <div class="score-entry empty-score-entry">
+            <span class="rank-number">{{ i }}</span>
+            <div class="player-info">
+              <span class="player-name empty-name"></span>
+              <span class="score-value empty-score"></span>
+            </div>
+          </div>
+        </ng-template>
+      </ng-container>
+
+      <div class="no-scores" *ngIf="getValidHighScores().length === 0" style="display: none;">
+        <p>No high scores yet!</p>
+        <p>Start playing to set your first record!</p>
+      </div>
+    </div>
+
+    <div class="high-scores-actions">
+      <button class="btn btn-primary" (click)="playAgain()">
+        Play Again
+      </button>
+      <button class="btn btn-secondary" (click)="closeHighScores()">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Level Up Banner Modal -->
+<div class="level-up-modal" *ngIf="showLevelUpBanner">
+  <div class="level-up-content">
+    <div class="level-up-header">
+      <span class="trophy-left">🏆</span>
+      <h2>Level Complete!</h2>
+      <span class="trophy-right">🏆</span>
+    </div>
+
+    <div class="level-up-info">
+      <h3>🎉 Congratulations! 🎉</h3>
+      <p>You've cleared all the ice blocks!</p>
+      
+      <div class="level-details">
+        <div class="current-level">
+          <h4>Current Level: <span class="level-number">{{ currentLevel - 1 }}</span></h4>
+        </div>
+        
+        <div class="next-level">
+          <h4>Next Level: <span class="level-number">{{ currentLevel }}</span></h4>
+          <p>Ice rows will drop faster!</p>
+          <p class="drop-speed">Drop Speed: {{ levelUpDropSpeed }}ms</p>
+        </div>
+        
+        <div class="current-score-display">
+          <h4>Current Score: <span class="score-highlight">{{ currentScore }}</span></h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="level-up-actions">
+      <button class="btn btn-primary btn-lg" (click)="continueToNextLevel()">
+        <i class="fas fa-play"></i> Continue to Level {{ currentLevel }}
+      </button>
+      <button class="btn btn-secondary" (click)="restartGame()">
+        <i class="fas fa-home"></i> Main Menu
+      </button>
+    </div>
+  </div>
+</div>
+
+<router-outlet></router-outlet>
