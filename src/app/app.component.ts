@@ -1,7 +1,8 @@
 import { Component, OnInit, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { ConfigurationService } from './services/configuration.service';
-import { ApiEndpointsService } from './services/api-endpoints.service';
 import { UserService } from './services/user.service';
+import { HighScoresService, HighScore } from './services/high-scores.service';
+import { BrowserPerformanceService } from './services/browser-performance.service';
 import * as THREE from 'three';
 import * as p5 from 'p5';
 
@@ -26,25 +27,20 @@ export class AppComponent implements OnInit, AfterViewInit {
   
   constructor(
     public configService: ConfigurationService,
-    private apiEndpointsService: ApiEndpointsService,
-    private userService: UserService
+    private userService: UserService,
+    private highScoresService: HighScoresService,
+    private performanceService: BrowserPerformanceService
   ) {}
 
   LEVEL_MINIMUM_ROWS = [
     1, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 7, 7,
     7, 7, 7, 8, 8, 8, 8, 8, 9,
   ];
-  LEVEL_MAX_SYMBOL: any = [
-    2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-    6, 6, 6, 6, 6, 6, 6, 6, 6,
-  ];
+
 
   ROW_COUNT: number = 8;
   COLUMN_COUNT: number = 10;
   TILE_SIZE: number[] = [64, 64];
-  GRID_POSITION: number[] = [0, 0];
-  GRID_POSITION_X: number = 0;
-  GRID_POSITION_Y: number = 0;
   TILE_PLACEMENT: number[][] = [];
   TILE_VALUES: number[] = [];
   TILE_SELECTED: boolean[] = [];
@@ -75,24 +71,17 @@ export class AppComponent implements OnInit, AfterViewInit {
   
   // Score properties
   currentScore: number = 0;
+  gameAttempts: number = 0; // Track number of target matches attempted
+  
+  // Performance optimization settings
+  private performanceSettings: any;
   
     // High Scores Management
-  highScores: {name: string, score: number}[] = [];
+  highScores: HighScore[] = [];
   showHighScores: boolean = true; // Show high scores by default
   currentPlayerName: string = '';
   customPlayerName: string = '';
   showPlayerNameInput: boolean = false;
-  
-  // Norse names for high scores
-  private norseNames: string[] = [
-    'Ragnar Frostbeard', 'Astrid Icewalker', 'Bjorn Ironside', 'Freydis Snowheart',
-    'Gunnar Stormborn', 'Ingrid Wintermoon', 'Leif Frostbane', 'Sigrid Iceshield',
-    'Erik Bloodaxe', 'Helga Frostborn', 'Olaf Icebreaker', 'Thora Snowblade',
-    'Magnus Coldsteel', 'Brynhild Frostfire', 'Thorin Iceforge', 'Solveig Winterborn',
-    'Hjalmar Frostclaw', 'Ragnhild Snowstorm', 'Ulf Iceheart', 'Valdis Frostwind',
-    'Rollo Icebreaker', 'Gudrun Snowfall', 'Sven Frostguard', 'Erika Icewalker',
-    'Ivar Boneless', 'Lagertha Shieldmaiden', 'Torstein Frostborn', 'Ylva Iceborn'
-  ];
   
   // Progressive tile drop properties
   currentRowCount: number = 0;
@@ -104,40 +93,36 @@ export class AppComponent implements OnInit, AfterViewInit {
   private iceBreakAudio: HTMLAudioElement | null = null;
   private dingAudio: HTMLAudioElement | null = null;
   private whooshAudio: HTMLAudioElement | null = null;
-  
-  SPECIAL_BOLTS: Array<number[]> = [
-    [2],
-    [3],
-    [4],
-    [2, 4, 6],
-    [1, 3, 5],
-    [5],
-    [6],
-    [2, 3, 5],
-  ];
-  TILE_FLOOR: String = 'floor';
 
   public ngOnInit(): void {
+    // Get performance settings based on browser
+    this.performanceSettings = this.performanceService.getPerformanceSettings();
+    
+    // Log performance info for debugging
+    console.log('Browser Performance Settings:', this.performanceSettings);
+    
+    // Start performance monitoring if on Edge
+    if (this.performanceSettings.browserInfo.isEdge) {
+      this.performanceService.startPerformanceMonitoring();
+      console.log('Edge browser detected - performance optimizations enabled');
+    }
+    
     // Initialize player name
     this.initializePlayerName();
     
     this.screenWidth = this.configService.getScreenWidth();
     this.screenHeight = this.configService.getScreenHeight();
     
-    // Load high scores from localStorage
+    // Load high scores from the service
     this.loadHighScores();
     
-    // Initialize clunk sound for tile drops
-    this.initializeClunkSound();
-    
-    // Initialize ice break sound for successful matches
-    this.initializeIceBreakSound();
-    
-    // Initialize ding sound for successful matches
-    this.initializeDingSound();
-    
-    // Initialize whoosh sound for row drops
-    this.initializeWhooshSound();
+    // Initialize sounds based on performance settings
+    if (this.performanceSettings.enableAnimations) {
+      this.initializeClunkSound();
+      this.initializeIceBreakSound();
+      this.initializeDingSound();
+      this.initializeWhooshSound();
+    }
     
     // Calculate optimal column count based on screen width
     // Tile size is 64px, add some padding between tiles (10px gap from CSS)
@@ -155,22 +140,23 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   public ngAfterViewInit(): void {
-    // Initialize p5.js full-screen snowfall
-    this.initP5Fullscreen();
+    // Only initialize p5.js if performance settings allow it
+    if (this.performanceSettings.enableP5) {
+      console.log('Initializing p5.js with frame rate:', this.performanceSettings.p5FrameRate);
+      this.initP5Fullscreen();
+    } else {
+      console.log('Skipping p5.js initialization for better performance');
+    }
   }
 
   /**
-   * Load high scores from localStorage
+   * Load high scores from the HighScoresService
    */
   private loadHighScores(): void {
-    const savedScores = localStorage.getItem('iceBreaker-highScores');
-    if (savedScores) {
-      try {
-        this.highScores = JSON.parse(savedScores);
-      } catch (e) {
-        this.highScores = [];
-      }
-    }
+    // Subscribe to high scores from the service
+    this.highScoresService.highScores$.subscribe(scores => {
+      this.highScores = scores;
+    });
   }
 
   /**
@@ -306,13 +292,6 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * Save high scores to localStorage
-   */
-  private saveHighScores(): void {
-    localStorage.setItem('iceBreaker-highScores', JSON.stringify(this.highScores));
-  }
-
-  /**
    * Add a new score to the high scores list
    */
   private addHighScore(score: number): void {
@@ -324,27 +303,34 @@ export class AppComponent implements OnInit, AfterViewInit {
     const playerName = this.getPlayerNameForScore();
     
     // Remove any existing scores from the same player
-    this.highScores = this.highScores.filter(s => s.name !== playerName);
+    this.highScores = this.highScores.filter(s => s.playerName !== playerName);
     
-    // Add the new score
-    this.highScores.push({ name: playerName, score: score });
-    this.highScores.sort((a, b) => b.score - a.score); // Sort by score descending
-    this.highScores = this.highScores.slice(0, 10); // Keep only top 10
-    this.saveHighScores();
+    // Add the new score - use the HighScoresService to submit it
+    const newScore = {
+      playerName: playerName,
+      score: score,
+      targetNumber: this.targetNumber,
+      attempts: this.gameAttempts,
+      gameType: 'ice-fishing'
+    };
+    
+    this.highScoresService.submitScoreWithBackup(newScore);
   }
 
   /**
    * Check if the current score qualifies as a high score
    */
   public isHighScore(score: number): boolean {
-    return this.highScores.length < 10 || score > this.highScores[this.highScores.length - 1].score;
+    return this.highScoresService.isHighScore(score);
   }
 
   /**
    * Get high scores that have a score greater than 0
    */
   public getValidHighScores(): {name: string, score: number}[] {
-    return this.highScores.filter(entry => entry.score > 0);
+    return this.highScores
+      .filter(entry => entry.score > 0)
+      .map(entry => ({ name: entry.playerName, score: entry.score }));
   }
 
   /**
@@ -374,15 +360,21 @@ export class AppComponent implements OnInit, AfterViewInit {
   private initP5Fullscreen(): void {
     try {
       
-      // Create full-screen snowfall sketch
+      // Create full-screen snowfall sketch with performance optimizations
       const fullscreenSketch = (p: any) => {
         let snowflakes: any[] = [];
         
         p.setup = () => {
           p.createCanvas(p.windowWidth, p.windowHeight);
           
+          // Set frame rate based on performance settings
+          p.frameRate(this.performanceSettings.p5FrameRate);
+          
+          // Reduce number of snowflakes for better performance
+          const maxParticles = this.performanceSettings.maxParticles;
+          
           // Initialize snowflakes
-          for (let i = 0; i < 200; i++) {
+          for (let i = 0; i < maxParticles; i++) {
             snowflakes.push({
               x: p.random(p.width),
               y: p.random(p.height),
@@ -394,6 +386,8 @@ export class AppComponent implements OnInit, AfterViewInit {
               opacity: p.random(150, 255) // Varying opacity
             });
           }
+          
+          console.log(`Initialized ${maxParticles} snowflakes at ${this.performanceSettings.p5FrameRate}fps`);
         };
 
         p.draw = () => {
@@ -589,14 +583,14 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * Generates a new target number between 1 and 16, or sum of remaining tiles if less than 5 remain
+   * Generates a new target number between 1 and 16, or sum of remaining tiles if 10 or fewer remain
    */
   private generateTargetNumber(): void {
     // Count remaining (non-hidden) tiles
     const remainingTileCount = this.TILE_HIDDEN.filter(hidden => !hidden).length;
     
-    // If less than 5 tiles remain, set target to sum of all remaining tile values
-    if (remainingTileCount < 5 && remainingTileCount > 0) {
+    // If 10 or fewer tiles remain, set target to sum of all remaining tile values
+    if (remainingTileCount <= 10 && remainingTileCount > 0) {
       let totalRemainingValue = 0;
       for (let i = 0; i < this.TILE_VALUES.length; i++) {
         if (!this.TILE_HIDDEN[i]) {
@@ -604,6 +598,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         }
       }
       this.targetNumber = totalRemainingValue;
+      console.log(`Endgame mode: ${remainingTileCount} tiles remaining, target set to sum: ${this.targetNumber}`);
     } else {
       // Normal random target generation
       this.targetNumber = Math.floor(Math.random() * 16) + 1; // 1 to 16
@@ -614,6 +609,9 @@ export class AppComponent implements OnInit, AfterViewInit {
    * Handles when selected tiles match the target number
    */
   private handleTargetMatch(): void {
+    // Increment attempts counter
+    this.gameAttempts++;
+    
     // Trigger the red flash animation on target number
     this.showCorrectFlash = true;
     setTimeout(() => {
@@ -757,6 +755,16 @@ export class AppComponent implements OnInit, AfterViewInit {
    */
   private createTileSnowflake(tileIndex: number): void {
     try {
+      // Skip Three.js if performance settings disable it
+      if (!this.performanceSettings.useWebGL) {
+        console.log('Skipping Three.js tile snowflake for performance');
+        this.tileRenderers.push(null as any);
+        this.tileScenes.push(null as any);
+        this.tileCameras.push(null as any);
+        this.tileSnowflakeMeshes.push([]);
+        return;
+      }
+      
       const tileElement = document.querySelector(`[data-index="${tileIndex}"]`) as HTMLElement;
       if (!tileElement) {
         console.warn(`Tile element not found for index ${tileIndex}`);
@@ -777,10 +785,21 @@ export class AppComponent implements OnInit, AfterViewInit {
       const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
       camera.position.z = 3;
 
-      // Create renderer
-      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      // Create renderer with performance optimizations
+      const renderer = new THREE.WebGLRenderer({ 
+        alpha: true, 
+        antialias: this.performanceSettings.antialias,
+        ...this.performanceSettings.webGLContextAttributes
+      });
       renderer.setSize(60, 60); // Slightly smaller than tile size (64x64)
       renderer.setClearColor(0x000000, 0); // Transparent background
+      
+      // Enable GPU acceleration if available
+      if (this.performanceSettings.enableGPUAcceleration) {
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
+      } else {
+        renderer.setPixelRatio(1); // Standard resolution for better performance
+      }
       
       // Add canvas to tile
       const canvas = renderer.domElement;
@@ -1010,6 +1029,7 @@ export class AppComponent implements OnInit, AfterViewInit {
    */
   public startGame(): void {
     this.currentScore = 0; // Reset score when starting a new game
+    this.gameAttempts = 0; // Reset attempts counter
     this.showHighScores = false; // Hide high scores when starting
     this.startGameTimer();
   }
@@ -1102,9 +1122,10 @@ export class AppComponent implements OnInit, AfterViewInit {
     }, 1000);
 
     // Start the row drop timer for progressive tile revelation
+    // Speed up new-row drop by 10 seconds (was 65s, now 55s)
     this.rowDropTimer = setInterval(() => {
       this.addNewRow();
-    }, 65000); // 35 seconds
+    }, 55000); // 55 seconds (10s faster)
   }
 
   /**
@@ -1290,6 +1311,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.levelUpDropSpeed = 1000;
     this.showLevelUpBanner = false;
     this.currentScore = 0; // Reset score when restarting
+    this.gameAttempts = 0; // Reset attempts counter
     
     // Reset progressive tile properties
     this.currentRowCount = 0;

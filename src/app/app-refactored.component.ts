@@ -35,6 +35,11 @@ export class AppRefactoredComponent implements OnInit, AfterViewInit, OnDestroy 
   showHighScores: boolean = false;
   showLevelUpBanner: boolean = false;
   
+  // Player name properties
+  currentPlayerName: string = '';
+  customPlayerName: string = '';
+  showPlayerNameInput: boolean = false;
+  
   // Arrays to match template
   TILE_PLACEMENT: number[][] = [];
   TILE_VALUES: number[] = [];
@@ -57,6 +62,7 @@ export class AppRefactoredComponent implements OnInit, AfterViewInit, OnDestroy 
     this.initializeScreenDimensions();
     this.initializeGameState();
     this.setupScreenChangeObserver();
+    this.initializePlayerName();
   }
 
   ngAfterViewInit(): void {
@@ -86,6 +92,12 @@ export class AppRefactoredComponent implements OnInit, AfterViewInit, OnDestroy 
 
     // Start a new game
     this.gameStateService.startNewGame();
+  }
+
+  private initializePlayerName(): void {
+    // Initialize with a default player name
+    this.currentPlayerName = 'Player';
+    this.customPlayerName = '';
   }
 
   private setupScreenChangeObserver(): void {
@@ -256,5 +268,20 @@ export class AppRefactoredComponent implements OnInit, AfterViewInit, OnDestroy 
     this.currentLevel++;
     this.showLevelUpBanner = false;
     this.startGame();
+  }
+
+  // Player name methods
+  public updatePlayerName(): void {
+    if (this.customPlayerName.trim()) {
+      this.currentPlayerName = this.customPlayerName.trim();
+      this.showPlayerNameInput = false;
+      // TODO: Save to localStorage or service
+    }
+  }
+
+  public resetPlayerName(): void {
+    this.currentPlayerName = 'Player'; // Default name
+    this.customPlayerName = '';
+    this.showPlayerNameInput = false;
   }
 }
