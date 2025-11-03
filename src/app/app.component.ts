@@ -62,12 +62,18 @@ export class AppComponent implements OnInit, AfterViewInit {
   gameStarted: boolean = false;
   private gameTimer: any = null;
   
+  // Track if game was manually restarted (for Game Over display)
+  wasGameRestarted: boolean = false;
+  
   // Level up mode properties
   isLevelUpMode: boolean = false;
   currentLevel: number = 1;
   levelUpDropSpeed: number = 1000; // Initial drop speed in ms
   private levelUpTimer: any = null;
   showLevelUpBanner: boolean = false;
+  
+  // Row drop timing (starts at 55s, gets 10s faster each level)
+  private currentRowDropInterval: number = 55000; // milliseconds
   
   // Score properties
   currentScore: number = 0;
@@ -1031,6 +1037,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.currentScore = 0; // Reset score when starting a new game
     this.gameAttempts = 0; // Reset attempts counter
     this.showHighScores = false; // Hide high scores when starting
+    this.wasGameRestarted = false; // Reset restart flag when starting new game
     this.startGameTimer();
   }
 
@@ -1122,10 +1129,10 @@ export class AppComponent implements OnInit, AfterViewInit {
     }, 1000);
 
     // Start the row drop timer for progressive tile revelation
-    // Speed up new-row drop by 10 seconds (was 65s, now 55s)
+    // Use dynamic interval that gets faster each level
     this.rowDropTimer = setInterval(() => {
       this.addNewRow();
-    }, 55000); // 55 seconds (10s faster)
+    }, this.currentRowDropInterval);
   }
 
   /**
@@ -1160,6 +1167,15 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.isLevelUpMode = true;
     this.gameState = 'levelup';
     this.currentLevel++;
+    
+    // Level completion bonuses
+    // Add 20 seconds to game time as reward
+    this.timeRemaining += 20;
+    console.log(`Level ${this.currentLevel} bonus: +20 seconds! Time remaining: ${this.timeRemaining}s`);
+    
+    // Make row drops 10 seconds faster each level (minimum 5 seconds)
+    this.currentRowDropInterval = Math.max(5000, this.currentRowDropInterval - 10000);
+    console.log(`Level ${this.currentLevel} challenge: Row drops now every ${this.currentRowDropInterval / 1000}s`);
     
     // Pause the game timer during level up
     if (this.gameTimer) {
@@ -1284,6 +1300,9 @@ export class AppComponent implements OnInit, AfterViewInit {
       this.addHighScore(this.currentScore);
     }
     
+    // Mark that game was manually restarted (for Game Over display)
+    this.wasGameRestarted = (this.gameState === 'playing');
+    
     // Always show high scores when restart is pressed
     this.showHighScores = true;
     
@@ -1312,6 +1331,9 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.showLevelUpBanner = false;
     this.currentScore = 0; // Reset score when restarting
     this.gameAttempts = 0; // Reset attempts counter
+    
+    // Reset row drop interval to initial value
+    this.currentRowDropInterval = 55000; // Back to 55 seconds
     
     // Reset progressive tile properties
     this.currentRowCount = 0;

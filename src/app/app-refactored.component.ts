@@ -35,6 +35,9 @@ export class AppRefactoredComponent implements OnInit, AfterViewInit, OnDestroy 
   showHighScores: boolean = false;
   showLevelUpBanner: boolean = false;
   
+  // Track if game was manually restarted (for Game Over display and button text)
+  wasGameRestarted: boolean = false;
+  
   // Player name properties
   currentPlayerName: string = '';
   customPlayerName: string = '';

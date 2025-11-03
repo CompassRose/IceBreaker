@@ -1272,7 +1272,7 @@
 
   @keyframes swimVertical {
     0% {
-      top: 60%;
+      top: 40%;
       transform: translateX(0);
     }
     25% {
@@ -1447,9 +1447,14 @@
   }
 
   .target-label,
-  .timer-label,
-  .selection-label,
   .score-label {
+    opacity: 0.9;
+    font-size: 26px; /* Slightly larger than other labels */
+    font-weight: 600; /* Make it bolder */
+  }
+
+  .timer-label,
+  .selection-label {
     opacity: 0.9;
     font-size: 24px;
   }
@@ -1481,15 +1486,35 @@
     text-align: center;
   }
 
+  /* Toolbar score display - larger and more prominent */
+  .toolbar-score-info .score-value {
+    background: rgba(255, 215, 0, 0.4); /* Slightly more opaque gold background */
+    padding: 18px 24px; /* Much larger padding for taller appearance */
+    border-radius: 8px; /* Slightly larger border radius */
+    font-weight: bold;
+    font-size: 30px; /* Increased from 28px to 36px for much larger font */
+    min-width: 100px; /* Increased minimum width */
+    text-align: center; /* Horizontal centering */
+    display: flex; /* Enable flexbox for perfect centering */
+    align-items: center; /* Vertical centering */
+    justify-content: center; /* Horizontal centering with flexbox */
+    color: #FFD700; /* Gold text color */
+    border: 2px solid rgba(255, 215, 0, 0.6); /* Thicker border */
+    text-shadow: 0 0 8px rgba(23, 21, 10, 0.5); /* Add glow effect */
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3); /* Add subtle shadow */
+    line-height: 1.2; /* Better line height for larger text */
+  }
+
+  /* High scores modal score display - keep original styling */
   .score-value {
-    background: rgba(255, 215, 0, 0.3); /* Gold background for score */
+    background: rgba(255, 215, 0, 0.3);
     padding: 8px 16px;
     border-radius: 6px;
     font-weight: bold;
     font-size: 22px;
     min-width: 60px;
     text-align: center;
-    color: #FFD700; /* Gold text color */
+    color: #FFD700;
     border: 1px solid rgba(255, 215, 0, 0.5);
   }
 
@@ -1540,17 +1565,36 @@
       font-size: 16px;
     }
     
+    .score-label {
+      font-size: 16px; /* Slightly larger for score on mobile */
+    }
+    
     .target-label,
     .timer-label,
-    .selection-label,
-    .score-label {
+    .selection-label {
       font-size: 14px;
+    }
+    
+    /* Toolbar score display on mobile - larger than other toolbar elements */
+    .toolbar-score-info .score-value {
+      font-size: 28px; /* Larger score value on mobile (increased from 22px) */
+      padding: 12px 20px; /* Increased padding for mobile */
+      min-width: 90px; /* Increased minimum width for mobile */
+      line-height: 1.2;
+      display: flex; /* Enable flexbox for perfect centering on mobile */
+      align-items: center; /* Vertical centering on mobile */
+      justify-content: center; /* Horizontal centering with flexbox on mobile */
+    }
+    
+    /* High scores modal and other score values stay normal size */
+    .score-value {
+      font-size: 18px;
+      padding: 6px 12px;
     }
     
     .target-number,
     .timer-value,
-    .selection-total,
-    .score-value {
+    .selection-total {
       font-size: 18px;
       padding: 6px 12px;
     }
@@ -1620,13 +1664,36 @@
     padding-bottom: 15px;
   }
 
+  .high-scores-header .header-text {
+    flex: 1;
+    text-align: center;
+  }
+
+  .high-scores-header .game-over-text {
+    margin: 0 0 10px 0;
+    color: #FF4444; /* Red color for Game Over */
+    font-size: 32px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    animation: pulseRed 1.5s ease-in-out infinite;
+  }
+
   .high-scores-header h2 {
     margin: 0;
     color: #FFD700;
     font-size: 28px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    flex: 1;
-    text-align: center;
+  }
+
+  @keyframes pulseRed {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
   }
 
   .trophy-left,
@@ -1998,6 +2065,10 @@
     .high-scores-content {
       padding: 20px;
       margin: 20px;
+    }
+    
+    .high-scores-header .game-over-text {
+      font-size: 26px; /* Smaller on mobile */
     }
     
     .high-scores-header h2 {

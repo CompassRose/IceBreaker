@@ -279,7 +279,10 @@
   <div class="high-scores-content">
     <div class="high-scores-header">
       <span class="trophy-left">🏆</span>
-      <h2>High Scores</h2>
+      <div class="header-text">
+        <h1 *ngIf="gameState === 'lost' || wasGameRestarted" class="game-over-text">Game Over</h1>
+        <h2>High Scores</h2>
+      </div>
       <span class="trophy-right">🏆</span>
     </div>
 
@@ -288,7 +291,7 @@
       <div class="current-player">
         <span class="player-label">Playing as:</span>
         <span class="player-name-display">{{ currentPlayerName }}</span>
-        <button class="edit-name-btn" (click)="togglePlayerNameInput()" title="Change player name">
+        <button class="edit-name-btn" (click)="showPlayerNameInput = !showPlayerNameInput" title="Change player name">
           ✏️
         </button>
       </div>
@@ -357,7 +360,7 @@
 
     <div class="high-scores-actions">
       <button class="btn btn-primary" (click)="playAgain()">
-        Play Again
+        {{ (currentScore > 0 || gameState === 'lost' || wasGameRestarted) ? 'Play Again' : 'Play Game' }}
       </button>
       <button class="btn btn-secondary" (click)="closeHighScores()">
         Close
@@ -406,5 +409,3 @@
     </div>
   </div>
 </div>
-
-<router-outlet></router-outlet>
